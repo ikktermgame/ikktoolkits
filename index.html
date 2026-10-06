@@ -241,7 +241,7 @@ button{cursor:pointer}
 
 .d1{left:25%;top:70px;color:#ffd34f}
 .d2{right:31%;top:80px;color:#ff86b8}
-.d3{left:8%;bottom:80px;color:#fff}
+.d3{left:15%;bottom:140px;color:#ff86b8}
 .d4{right:6%;top:18px;color:#ffd34f}
 
 /* ===== Main content ===== */
@@ -407,6 +407,7 @@ button{cursor:pointer}
   color:var(--navy);
   box-shadow:4px 5px 0 rgba(126,200,227,.18);
   transition:.16s ease;
+  text-decoration:none;
 }
 
 .shortcut:hover{
@@ -516,6 +517,7 @@ button{cursor:pointer}
   display:block;
   color:#8a7c6d;
   font-size:12px;
+  line-height:1.45;
 }
 
 .stat strong{
@@ -907,22 +909,19 @@ button{cursor:pointer}
 
   .topbar{
     width:100%;
-    overflow-x:auto;
+    overflow-x:hidden;
     justify-content:flex-start;
     margin-bottom:4px;
     border-radius:14px;
   }
 
   .topbar button{
-    font-size:8px;
+    font-size:11px;
     padding:10px 12px;
     white-space:nowrap;
   }
     .nav-btn{
-    font-size:8px;
-    white-space:nowrap;
-    flex-shrink:0;
-    padding:10px 12px;
+    display:none;
   }
 
   .hero{
@@ -1011,11 +1010,37 @@ button{cursor:pointer}
     color: #25224b;
     text-decoration: none;
 }
-@media(max-width:420px){
-  .hero{min-height:395px}
-  .hero h1{font-size:25px}
-  .hero h2{font-size:16px}
-  .hero-character{width:285px}
+@media (max-width: 1199px){
+  .hero-character{
+    display:none;
+  }
+
+.cloud-center{
+    width:830px;
+    top:5px;
+  }
+
+  .hero-copy{
+    width:90%;
+    top:60px;
+  }
+
+  .hero h1{
+    font-size:48px;
+  }
+
+  .hero h2{
+    font-size:28px;
+  }
+
+  .kicker{
+    font-size:12px;
+  }
+
+  .hero-sub{
+    font-size:15px;
+    padding:8px 20px;
+  }
 }
 .nav-btn {
   appearance: none;
@@ -1046,7 +1071,7 @@ button{cursor:pointer}
 
   <nav class="topbar">
     <button class="active" onclick="home(this)">🏠︎ HOME</button>
-    <button onclick="show('echoes',this)">★ CALCULATOR</button>
+    <button onclick="openCalculator(this)">★ CALCULATOR</button>
     <button onclick="show('claim',this)">★ EARN POINTS</button>
     <a class="nav-btn" href="admin.html">NOT HEHE~</a>
   </nav>
@@ -1073,8 +1098,8 @@ button{cursor:pointer}
       
       <div class="kicker">IKK TERMGAME</div>
       <h1>IKK</h1>
-      <h2>CALCULATOR</h2>
-      <p class="hero-sub">เครื่องมือช่วยคำนวณแพ็คกระดุมแดง คิดมาแล้ว ออโต้ได้เลย !</p>
+      <h2>TOOLKITS</h2>
+      <p class="hero-sub">เครื่องมือช่วยคำนวณ ECHOES ระบบอัตโนมัติ ★</p>
     </div>
 
     <div class="hero-character">
@@ -1096,7 +1121,7 @@ button{cursor:pointer}
             <div class="tool-icon">🔮</div>
             <h3 class="tool-name">ECHOES<br>CALCULATOR</h3>
           </div>
-          <p class="tool-desc">คำนวณ Echoes ที่ตามต้องการ<br>กี่คะคุณ ?</p>
+          <p class="tool-desc">คำนวณ Echoes ที่ตามต้องการ</p>
           <button class="tool-open" onclick="show('echoes')">
             เริ่มคำนวณ <span>›</span>
           </button>
@@ -1145,11 +1170,11 @@ button{cursor:pointer}
             <span>›</span>
           </button>
 
-          <button class="shortcut" onclick="show('info')">
-            <span class="sicon">⚙️</span>
-            <strong>ตั้งค่า / อื่น ๆ</strong>
+          <a class="shortcut" href="https://ikkcardlab.com/" target="_blank" rel="noopener">
+            <span class="sicon">🎨</span>
+            <strong>เว็บเรียงสกิน ikkcardlab</strong>
             <span>›</span>
-          </button>
+          </a>
         </div>
       </section>
     </section>
@@ -1242,18 +1267,35 @@ function calc(target,mode='e'){
  return best||{a:0,b:0,c:0,d:0,price:0,echoes:0,v:0};
 }
 
-function result(b,target,label='Echoes'){
- return `<div class="result"><div class="title">CHEAPEST COMBINATION</div>
- ${b.d?`<div class="line"><b>759 Echoes × ${b.d}</b></div>`:''}
- ${b.c?`<div class="line"><b>335 Echoes × ${b.c}</b></div>`:''}
- ${b.b?`<div class="line"><b>203 Echoes × ${b.b}</b></div>`:''}
- ${b.a?`<div class="line"><b>66 Echoes × ${b.a}</b></div>`:''}</div>
- <div class="stats"><div class="stat"><span>ต้องการ ${label}</span><strong>${target.toLocaleString()}</strong></div>
- <div class="stat"><span>ได้รับ Echoes</span><strong>${b.echoes.toLocaleString()}</strong></div>
- <div class="stat price"><span>ราคา</span><strong>${b.price.toLocaleString()}฿</strong></div></div>`;
+function result(b,target,label='Echoes',customStats=null){
+  const stats = customStats || [
+    {label:`ต้องการ ${label}`,value:target.toLocaleString()},
+    {label:'ได้รับ Echoes',value:b.echoes.toLocaleString()},
+    {label:'ราคา',value:`${b.price.toLocaleString()}฿`,cls:'price'}
+  ];
+  return `<div class="result"><div class="title">CHEAPEST COMBINATION</div>
+  ${b.d?`<div class="line"><b>759 Echoes × ${b.d}</b></div>`:''}
+  ${b.c?`<div class="line"><b>335 Echoes × ${b.c}</b></div>`:''}
+  ${b.b?`<div class="line"><b>203 Echoes × ${b.b}</b></div>`:''}
+  ${b.a?`<div class="line"><b>66 Echoes × ${b.a}</b></div>`:''}</div>
+  <div class="stats">${stats.map(s=>`<div class="stat ${s.cls||''}"><span>${s.label}</span><strong>${s.value}</strong></div>`).join('')}</div>`;
 }
 
 const WEB_APP_URL='https://script.google.com/macros/s/AKfycbw3xipY2M3nkBGmAp2J-gt5wrc6f2wt_242F3vRHeaDUlX3B3yJGcIMIgpQXvGQn3rQ/exec';
+const TOOLKIT_ROOT='/ikktoolkits/';
+const EARN_POINTS_URL=TOOLKIT_ROOT+'earnpoints/';
+
+function openEarnPoints(){
+  window.location.href=EARN_POINTS_URL;
+}
+
+function openCalculator(btn){
+  if(window.location.pathname.replace(/\/+$/,'/')===EARN_POINTS_URL){
+    window.location.href=TOOLKIT_ROOT;
+    return;
+  }
+  show('echoes',btn);
+}
 
 function scrollToSection(id){
  const el=document.getElementById(id);
@@ -1276,17 +1318,17 @@ function home(btn){
    <div class="tool-grid">
      <article class="tool-card">
        <div class="tool-card-top"><div class="tool-icon">📬</div><h3 class="tool-name">ECHOES<br>CALCULATOR</h3></div>
-       <p class="tool-desc">คำนวณจำนวน Echoes<br>ที่ต้องใช้</p>
+       <p class="tool-desc">คำนวณ Echoes ที่ต้องการ</p>
        <button class="tool-open" onclick="show('echoes')">เริ่มคำนวณ <span>›</span></button>
      </article>
      <article class="tool-card">
        <div class="tool-card-top"><div class="tool-icon">🎟️</div><h3 class="tool-name">RECHARRGE GIFT<br>CALCULATOR</h3></div>
-       <p class="tool-desc">คำนวณยอดเติมสะสม<br>แพ็กที่คุ้มที่สุด</p>
+       <p class="tool-desc">คำนวณยอดรางวัลเติมเงินสะสม</p>
        <button class="tool-open" onclick="show('points')">เริ่มคำนวณ <span>›</span></button>
      </article>
      <article class="tool-card">
-       <div class="tool-card-top"><div class="tool-icon">🔮</div><h3 class="tool-name">ORB<br>CALCULATOR</h3></div>
-       <p class="tool-desc">คำนวณจำนวนลูกแก้ว<br>จากจำนวน Echoes</p>
+       <div class="tool-card-top"><div class="tool-icon">🔮</div><h3 class="tool-name">ESSENCE<br>CALCULATOR</h3></div>
+       <p class="tool-desc">คำนวณลูกแก้ว Essence<br>และจำนวน Echoes ที่ได้รับ</p>
        <button class="tool-open" onclick="show('orb')">เริ่มคำนวณ <span>›</span></button>
      </article>
    </div>
@@ -1298,7 +1340,17 @@ function home(btn){
      <div class="shortcut-grid">
        <button class="shortcut" onclick="show('claim')"><span class="sicon">⭐</span><strong>สะสมแต้ม</strong><span>›</span></button>
        <button class="shortcut" onclick="show('info')"><span class="sicon">📖</span><strong>วิธีสุ่มส่วนลด/กระดุม เว็บอฟช.</strong><span>›</span></button>
-       <button class="shortcut" onclick="show('info')"><span class="sicon">⚙️</span><strong>ตั้งค่า / อื่น ๆ</strong><span>›</span></button>
+
+<button
+  class="shortcut"
+  type="button"
+  onclick="window.open('https://ikkcardlab.com/', '_blank', 'noopener,noreferrer')"
+>
+  <span class="sicon">🎨</span>
+  <strong>เว็บไซต์เรียงสกิน ikkcardlab</strong>
+  <span>›</span>
+</button>
+
      </div>
    </section>
  </section>`;
@@ -1319,7 +1371,7 @@ function show(page,btn){
  setTopActive(btn);
 
  if(page==='echoes'){
-  renderPage('📬 ECHOES CALCULATOR','หาชุดแพ็กที่คุ้มที่สุด',`
+  renderPage('📬 ECHOES CALCULATOR','คำนวนแพ็กกระดุมตามจำนวนที่ต้องการ',`
    <div class="calc-card">
     <label class="calc-label">จำนวน Echoes ที่ต้องการ</label>
     <div class="calc-row">
@@ -1334,7 +1386,7 @@ function show(page,btn){
  if(page==='points'){
   renderPage('🎟️ RECHARRGE GIFT CALCULATOR','คิดตามยอดรางวัลเติมเงินสะสม',`
    <div class="calc-card">
-    <label class="calc-label">ต้องการแต้มสะสมเท่าไหร่?</label>
+    <label class="calc-label">กรอกยอดเติมสะสมที่ต้องการ</label>
     <div class="calc-row">
      <input id="n" class="calc-input" type="number" value="0" min="0">
      <button class="calc-primary" onclick="gp()">คำนวณ</button>
@@ -1345,7 +1397,7 @@ function show(page,btn){
  }
 
  if(page==='orb'){
-  renderPage('🔮 ORB CALCULATOR','1 ลูกแก้ว = 96 Echoes',`
+  renderPage('🔮 ESSENCE CALCULATOR','1 ลูกแก้ว = 96 Echoes',`
    <div class="calc-card orb-calc-card">
     <div class="orb-layout">
 
@@ -1438,7 +1490,11 @@ function gp(){
  let n=+document.getElementById('n').value;
  if(n<0)n=0;
  let b=calc(n,'p');
- document.getElementById('r').innerHTML=result(b,n,'แต้มสะสม');
+ document.getElementById('r').innerHTML=result(b,n,'แต้มสะสม',[
+   {label:'ได้รับ Echoes',value:b.echoes.toLocaleString()},
+   {label:'ได้รับ ยอดเติมสะสม',value:b.v.toLocaleString()+' บาท'},
+   {label:'ราคา',value:b.price.toLocaleString()+'฿',cls:'price'}
+ ]);
 }
 
 function orb(){
@@ -1558,7 +1614,23 @@ function initClaim(){
  });
 }
 
-home(document.querySelector('.topbar button'));
+const initialPath=window.location.pathname.replace(/\/+$/,'/');
+if(initialPath===EARN_POINTS_URL){
+  const earnBtn=document.querySelector('.topbar .nav-btn[href*="earnpoints"]');
+  show('claim',earnBtn);
+}else{
+  home(document.querySelector('.topbar button'));
+}
+
+window.addEventListener('popstate',()=>{
+  const path=window.location.pathname.replace(/\/+$/,'/');
+  if(path===EARN_POINTS_URL){
+    const earnBtn=document.querySelector('.topbar .nav-btn[href*="earnpoints"]');
+    show('claim',earnBtn);
+  }else{
+    home(document.querySelector('.topbar button'));
+  }
+});
 </script>
 </body>
 </html>
