@@ -2,6 +2,23 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<script>
+/* (1) รับ URL ที่ 404.html ส่งต่อมา เช่น /ikktoolkits/?/earnpoints  ->  /ikktoolkits/earnpoints */
+(function(l){
+  if(l.search[1]==='/'){
+    var decoded=l.search.slice(1).split('&').map(function(s){return s.replace(/~and~/g,'&')}).join('?');
+    window.history.replaceState(null,null,l.pathname.slice(0,-1)+decoded+l.hash);
+  }
+}(window.location));
+/* (2) ล็อกฐานของไฟล์รูป ให้ลิงก์รูปไม่พังเมื่อ URL ลงท้ายด้วย / เช่น /ikktoolkits/earnpoints/ */
+(function(){
+  if(location.protocol.indexOf('http')===0&&location.pathname.indexOf('/ikktoolkits/')===0){
+    var b=document.createElement('base');
+    b.href='/ikktoolkits/';
+    document.head.insertBefore(b,document.head.firstChild);
+  }
+})();
+</script>
 <link rel="icon" type="image/png" href="ikk.png">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IKK คุณอิคคิดมาแล้ว !</title>
@@ -1070,9 +1087,9 @@ button{cursor:pointer}
 <div class="app">
 
   <nav class="topbar">
-    <button class="active" onclick="home(this)">🏠︎ HOME</button>
-    <button onclick="openCalculator(this)">★ CALCULATOR</button>
-    <button onclick="show('claim',this)">★ EARN POINTS</button>
+    <button class="active" data-nav="home" onclick="home(this)">🏠︎ HOME</button>
+    <button data-nav="calculator" onclick="openCalculator(this)">★ CALCULATOR</button>
+    <button data-nav="earnpoints" onclick="show('claim',this)">★ EARN POINTS</button>
     <a class="nav-btn" href="admin.html">NOT HEHE~</a>
   </nav>
 
@@ -1282,33 +1299,34 @@ function result(b,target,label='Echoes',customStats=null){
 }
 
 const WEB_APP_URL='https://script.google.com/macros/s/AKfycbw3xipY2M3nkBGmAp2J-gt5wrc6f2wt_242F3vRHeaDUlX3B3yJGcIMIgpQXvGQn3rQ/exec';
-const TOOLKIT_ROOT='/ikktoolkits/';
-const EARN_POINTS_URL=TOOLKIT_ROOT+'earnpoints/';
+/* ===== URL ของแต่ละหน้า =====
+   ชื่อหน้า (ซ้าย) -> ส่วนท้ายของ URL (ขวา)  แก้ชื่อ/เพิ่มหน้าใหม่ได้ที่นี่ที่เดียว
+   เช่น claim -> https://ikktermgame.github.io/ikktoolkits/earnpoints          */
+const TOOLKIT_ROOT='/ikktoolkits/';   // ชื่อ repo บน GitHub Pages (ถ้าย้ายไปโดเมนตัวเอง ให้เปลี่ยนเป็น '/')
+const ROUTES={
+  home:'',
+  echoes:'echoes',
+  points:'recharge',
+  orb:'essence',
+  claim:'earnpoints',
+  info:'guide'
+};
+/* ปุ่มเมนูด้านบนที่ต้องไฮไลต์ เมื่ออยู่หน้านั้นๆ */
+const NAV_OF={home:'home',echoes:'calculator',points:'calculator',orb:'calculator',claim:'earnpoints',info:''};
 
-function openEarnPoints(){
-  window.location.href=EARN_POINTS_URL;
-}
-
-function openCalculator(btn){
-  if(window.location.pathname.replace(/\/+$/,'/')===EARN_POINTS_URL){
-    window.location.href=TOOLKIT_ROOT;
-    return;
-  }
-  show('echoes',btn);
-}
+function openEarnPoints(){show('claim')}
+function openCalculator(){show('echoes')}
 
 function scrollToSection(id){
  const el=document.getElementById(id);
  if(el)el.scrollIntoView({behavior:'smooth'});
 }
 
-function setTopActive(btn){
- document.querySelectorAll('.topbar button').forEach(x=>x.classList.remove('active'));
- if(btn)btn.classList.add('active');
+function setTopActive(navKey){
+ document.querySelectorAll('.topbar button').forEach(x=>x.classList.toggle('active',!!navKey&&x.dataset.nav===navKey));
 }
 
-function home(btn){
- setTopActive(btn);
+function renderHome(){
  document.getElementById('content').innerHTML=`
  <section id="homePage">
    <div class="section-head">
@@ -1367,8 +1385,7 @@ function renderPage(title,sub,html){
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function show(page,btn){
- setTopActive(btn);
+function renderView(page){
 
  if(page==='echoes'){
   renderPage('📬 ECHOES CALCULATOR','คำนวนแพ็กกระดุมตามจำนวนที่ต้องการ',`
@@ -1614,23 +1631,50 @@ function initClaim(){
  });
 }
 
-const initialPath=window.location.pathname.replace(/\/+$/,'/');
-if(initialPath===EARN_POINTS_URL){
-  const earnBtn=document.querySelector('.topbar .nav-btn[href*="earnpoints"]');
-  show('claim',earnBtn);
-}else{
-  home(document.querySelector('.topbar button'));
+/* ===== Router: เปลี่ยน URL ตามหน้าที่เปิด ===== */
+function routingEnabled(){
+  return location.protocol.indexOf('http')===0&&location.pathname.indexOf(TOOLKIT_ROOT)===0;
 }
 
-window.addEventListener('popstate',()=>{
-  const path=window.location.pathname.replace(/\/+$/,'/');
-  if(path===EARN_POINTS_URL){
-    const earnBtn=document.querySelector('.topbar .nav-btn[href*="earnpoints"]');
-    show('claim',earnBtn);
-  }else{
-    home(document.querySelector('.topbar button'));
+function urlFor(page){return TOOLKIT_ROOT+ROUTES[page]}
+
+function trimSlash(path){return path.replace(/\/+$/,'')}
+
+function pageFromUrl(){
+  if(!routingEnabled())return 'home';
+  const slug=trimSlash(location.pathname.slice(TOOLKIT_ROOT.length));
+  return Object.keys(ROUTES).find(k=>slug!==''&&ROUTES[k]===slug)||'home';
+}
+
+function syncUrl(page){
+  if(!routingEnabled())return;
+  if(trimSlash(location.pathname)===trimSlash(urlFor(page)))return; // อยู่หน้านี้แล้ว ไม่เพิ่มประวัติซ้ำ
+  history.pushState({page},'',urlFor(page));
+}
+
+function navigate(page,push=true){
+  if(!(page in ROUTES))page='home';
+  if(page==='home')renderHome();else renderView(page);
+  setTopActive(NAV_OF[page]);
+  if(push)syncUrl(page);
+}
+
+/* ฟังก์ชันที่ปุ่มทุกปุ่มในเว็บเรียกใช้ (onclick="show('claim')" ฯลฯ) ยังใช้ชื่อเดิม */
+function home(){navigate('home')}
+function show(page){navigate(page)}
+
+/* ปุ่ม Back / Forward ของเบราว์เซอร์ */
+window.addEventListener('popstate',()=>navigate(pageFromUrl(),false));
+
+/* เปิดเว็บครั้งแรก: แสดงหน้าตาม URL ที่เข้ามา */
+(function init(){
+  const page=pageFromUrl();
+  navigate(page,false);
+  // URL มั่ว (เช่น /ikktoolkits/abc) -> แสดงหน้าแรกและแก้ URL ให้ถูก
+  if(routingEnabled()&&trimSlash(location.pathname)!==trimSlash(urlFor(page))){
+    history.replaceState({page},'',urlFor(page));
   }
-});
+})();
 </script>
 </body>
 </html>

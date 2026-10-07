@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <title>IKK Toolkits</title>
+  <script>
+    // GitHub Pages แบบ "project site" จะมีชื่อ repo (/ikktoolkits/) นำหน้าเสมอ
+    // เลยต้องเก็บไว้ 1 ส่วน ถ้าเปลี่ยนชื่อ repo ไม่ต้องแก้เลข แต่ถ้าย้ายไปเป็น
+    // โดเมนของตัวเอง (ไม่มี /ikktoolkits/) ให้เปลี่ยนเลขนี้เป็น 0
+    var pathSegmentsToKeep = 1;
+
+    // ส่งต่อ path ที่ผู้ใช้พิมพ์ (เช่น /ikktoolkits/earnpoints) ไปที่หน้า index.html
+    // ในรูปแบบ /ikktoolkits/?/earnpoints แล้วให้ index.html แปลงกลับเป็น URL สวยๆ เอง
+    var l = window.location;
+    l.replace(
+      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+      l.hash
+    );
+  </script>
+</head>
+<body></body>
+</html>
